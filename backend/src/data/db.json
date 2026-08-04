@@ -1,0 +1,92 @@
+{
+  "_comentario": "Este arquivo simula a 'planilha' do Google Sheets. Cada array representa uma aba. Veja src/services/sheetsService.js para o ponto de troca pela integração real.",
+  "consultores": [
+    {
+      "id": "c1",
+      "nome": "Ana Beatriz Souza",
+      "especialidade": "Cardiologia"
+    },
+    {
+      "id": "c2",
+      "nome": "Ruan Oliveira",
+      "especialidade": "Automação e Processos"
+    },
+    {
+      "id": "c3",
+      "nome": "Marcos Vinícius Lima",
+      "especialidade": "Financeiro"
+    }
+  ],
+  "agendamentos": [
+    {
+      "id": "a1",
+      "consultorId": "c1",
+      "data": "2026-08-05",
+      "horaInicio": "09:00",
+      "horaFim": "10:00",
+      "cliente": "Hospital Vida Nova",
+      "descricao": "Revisão de protocolo de atendimento",
+      "tipo": "Reunião de revisão"
+    },
+    {
+      "id": "a2",
+      "consultorId": "c1",
+      "data": "2026-08-05",
+      "horaInicio": "14:00",
+      "horaFim": "15:00",
+      "cliente": "Clínica Bem Estar",
+      "descricao": "Apresentação de resultados trimestrais",
+      "tipo": "Apresentação"
+    },
+    {
+      "id": "a3",
+      "consultorId": "c2",
+      "data": "2026-08-05",
+      "horaInicio": "10:30",
+      "horaFim": "11:30",
+      "cliente": "Sistólica Interno",
+      "descricao": "Alinhamento do sprint de automação",
+      "tipo": "Reunião interna"
+    },
+    {
+      "id": "014276ad-36b8-4286-aa50-b58e2124b3c0",
+      "consultorId": "c1",
+      "data": "2026-08-04",
+      "horaInicio": "09:00",
+      "horaFim": "10:00",
+      "cliente": "Ruan",
+      "descricao": "Treinamento de reforço",
+      "tipo": "Tela de cadastros"
+    },
+    {
+      "id": "04ac1533-2842-4d5f-b582-2bf3818bef63",
+      "consultorId": "c1",
+      "data": "2026-08-04",
+      "horaInicio": "11:00",
+      "horaFim": "12:00",
+      "cliente": "2",
+      "descricao": "w",
+      "tipo": "w"
+    },
+    {
+      "id": "c1f1c712-2394-418f-a147-bbce4d629ecd",
+      "consultorId": "c1",
+      "data": "2026-08-04",
+      "horaInicio": "10:00",
+      "horaFim": "10:30",
+      "cliente": "2",
+      "descricao": "w",
+      "tipo": "w"
+    },
+    {
+      "id": "8de3fd61-afb9-4e8e-8893-e2e5a77d9ad8",
+      "consultorId": "c1",
+      "data": "2026-08-04",
+      "horaInicio": "08:00",
+      "horaFim": "08:30",
+      "cliente": "Ruan",
+      "descricao": "qual seria o melhor horário na sexta\n",
+      "tipo": "Atendimento geral"
+    }
+  ]
+}
