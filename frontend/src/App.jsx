@@ -190,7 +190,7 @@ export default function App() {
         carregando={carregandoIA}
         sugestao={sugestao}
       />
-<p>Teste de integração com GitHub</p>
+
       <Toast toasts={toasts} />
     </div>
     
