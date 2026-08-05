@@ -5,6 +5,7 @@ import cors from 'cors';
 import consultoresRouter from './src/routes/consultores.js';
 import agendaRouter from './src/routes/agenda.js';
 import iaRouter from './src/routes/ia.js';
+import { integracaoReal } from './src/services/sheetsService.js';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -13,7 +14,11 @@ app.use(cors());
 app.use(express.json());
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', servico: 'sistolica-agenda-backend' });
+  res.json({
+    status: 'ok',
+    servico: 'sistolica-agenda-backend',
+    googleSheets: integracaoReal ? 'integração real' : 'simulado',
+  });
 });
 
 app.use('/api/consultores', consultoresRouter);

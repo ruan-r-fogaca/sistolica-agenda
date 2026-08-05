@@ -87,6 +87,65 @@ local (configurado em `vite.config.js`), então não precisa configurar nada a m
 
 ---
 
+## Integração real com Google Sheets
+
+Por padrão o app roda no modo simulado (grava em `backend/src/data/db.json`).
+Para ligar a integração real:
+
+### 1. Criar a planilha
+
+1. Crie uma planilha nova em [sheets.google.com](https://sheets.google.com).
+2. Renomeie a primeira aba para `Consultores` e, na primeira linha, coloque
+   os cabeçalhos: `id | nome | especialidade`.
+3. Crie uma segunda aba chamada `Agendamentos` com os cabeçalhos:
+   `id | consultorId | data | horaInicio | horaFim | cliente | descricao | tipo`.
+4. Copie o ID da planilha: é o trecho da URL entre `/d/` e `/edit`, por
+   exemplo em `https://docs.google.com/spreadsheets/d/AAAA1234BBBB/edit`
+   o ID é `AAAA1234BBBB`.
+
+### 2. Criar a Service Account no Google Cloud
+
+1. Acesse [console.cloud.google.com](https://console.cloud.google.com) e
+   crie um projeto novo (ou use um existente).
+2. No menu, vá em **APIs e serviços → Biblioteca**, procure **Google Sheets
+   API** e clique em **Ativar**.
+3. Vá em **APIs e serviços → Credenciais → Criar credenciais → Conta de
+   serviço**. Dê um nome qualquer e conclua a criação.
+4. Clique na conta de serviço criada → aba **Chaves** → **Adicionar chave →
+   Criar nova chave → JSON**. Isso baixa um arquivo `.json` no seu
+   computador — guarde-o, ele é a credencial.
+5. Copie o e-mail da conta de serviço (algo como
+   `nome@projeto.iam.gserviceaccount.com`, aparece na tela de detalhes).
+
+### 3. Compartilhar a planilha com a Service Account
+
+Na planilha do passo 1, clique em **Compartilhar** e cole o e-mail da conta
+de serviço (do passo anterior), dando permissão de **Editor**.
+
+### 4. Converter a chave para base64 e configurar o `.env`
+
+No PowerShell (Windows), dentro da pasta onde está o arquivo `.json` baixado:
+
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("nome-do-arquivo.json")) | Set-Clipboard
+```
+
+Isso copia o valor para a área de transferência. Cole no `backend/.env`:
+
+```
+GOOGLE_SHEET_ID=AAAA1234BBBB
+GOOGLE_SERVICE_ACCOUNT_B64=(cole aqui o texto copiado)
+```
+
+Reinicie o backend (`Ctrl+C` e `npm run dev` de novo). Se der certo, ao
+acessar `http://localhost:4000/api/health` o campo `googleSheets` deve
+aparecer como `"integração real"` em vez de `"simulado"`.
+
+Para o deploy (Render), adicione essas duas mesmas variáveis em
+**Environment Variables** do serviço, com os mesmos valores.
+
+---
+
 ## Deploy
 
 O frontend (Vite/React) é 100% estático e sobe direto no **Vercel**. O
