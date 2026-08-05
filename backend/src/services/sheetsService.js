@@ -27,6 +27,7 @@
  */
 
 import { readFile, writeFile } from 'fs/promises';
+import { existsSync } from 'fs';
 import { randomUUID } from 'crypto';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -37,20 +38,48 @@ const DB_PATH = path.join(__dirname, '..', 'data', 'db.json');
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID;
 const CREDS_B64 = process.env.GOOGLE_SERVICE_ACCOUNT_B64;
-const MODO_REAL = Boolean(SHEET_ID && CREDS_B64);
+
+// Caminho de um "Secret File" do Render (ou qualquer arquivo local) contendo
+// o JSON da service account SEM precisar de base64. Mais confiável do que
+// colar uma string enorme em um campo de variável de ambiente, que corta
+// facilmente no copiar/colar.
+const CREDS_FILE_PATH =
+  process.env.GOOGLE_SERVICE_ACCOUNT_FILE || '/etc/secrets/google-credentials.json';
+
+function existeArquivoCredenciais() {
+  try {
+    return existsSync(CREDS_FILE_PATH);
+  } catch {
+    return false;
+  }
+}
+
+const MODO_REAL = Boolean(SHEET_ID && (CREDS_B64 || existeArquivoCredenciais()));
 
 const ABA_CONSULTORES = 'Consultores';
 const ABA_AGENDAMENTOS = 'Agendamentos';
 
 let sheetsClientPromise = null;
+
+async function carregarCredenciais() {
+  if (existeArquivoCredenciais()) {
+    const conteudo = await readFile(CREDS_FILE_PATH, 'utf-8');
+    return JSON.parse(conteudo);
+  }
+  if (!CREDS_B64) {
+    throw new Error(
+      'Credenciais do Google não configuradas: defina GOOGLE_SERVICE_ACCOUNT_FILE ' +
+        '(Secret File) ou GOOGLE_SERVICE_ACCOUNT_B64.'
+    );
+  }
+  return JSON.parse(Buffer.from(CREDS_B64, 'base64').toString('utf-8'));
+}
 let sheetIdNumericoCache = null;
 
 async function getSheetsClient() {
   if (!sheetsClientPromise) {
     sheetsClientPromise = (async () => {
-      const credenciais = JSON.parse(
-        Buffer.from(CREDS_B64, 'base64').toString('utf-8')
-      );
+      const credenciais = await carregarCredenciais();
       const auth = new google.auth.GoogleAuth({
         credentials: credenciais,
         scopes: ['https://www.googleapis.com/auth/spreadsheets'],

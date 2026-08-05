@@ -5,7 +5,7 @@ import {
   deleteAgendamento,
   getConsultores,
 } from '../services/sheetsService.js';
-import { encontrarConflito, calcularHorariosLivres, validarDescansoObrigatorio } from '../services/conflictService.js';
+import { validarNovoAgendamento, calcularHorariosLivres } from '../services/conflictService.js';
 
 const router = Router();
 
@@ -52,18 +52,17 @@ router.post('/', async (req, res) => {
   }
 
   const agendamentosDoDia = await getAgendamentos({ consultorId, data });
-  const conflito = encontrarConflito(agendamentosDoDia, { horaInicio, horaFim });
+  const validacao = validarNovoAgendamento(agendamentosDoDia, { horaInicio, horaFim });
 
-  if (conflito) {
+  if (!validacao.ok && validacao.motivo === 'conflito') {
     return res.status(409).json({
       erro: 'Conflito de horário: o consultor já tem um compromisso nesse intervalo.',
-      conflito,
+      conflito: validacao.conflito,
     });
   }
 
-  const descanso = validarDescansoObrigatorio(agendamentosDoDia, { horaInicio, horaFim });
-  if (descanso.violacao) {
-    return res.status(409).json({ erro: descanso.mensagem });
+  if (!validacao.ok && validacao.motivo === 'descanso') {
+    return res.status(409).json({ erro: validacao.mensagem });
   }
 
   const registro = await addAgendamento({
