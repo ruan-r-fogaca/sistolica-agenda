@@ -2,7 +2,6 @@ const INICIO_EXPEDIENTE = 8 * 60; // 08:00
 const FIM_EXPEDIENTE = 18 * 60; // 18:00
 const PASSO = 30; // minutos
 const DURACAO_MAXIMA_SEGUIDA = 60; // minutos
-const DESCANSO_MINIMO = 30; // minutos
 
 function paraMinutos(hhmm) {
   const [h, m] = hhmm.split(':').map(Number);
@@ -61,39 +60,28 @@ export default function CalendarGrid({ agendamentos, onSlotLivreClick, onExcluir
 
   return (
     <div className="rounded-xl border border-white/10 overflow-hidden bg-ink/60">
-      {slots.map((slot, idx) => {
+      {slots.map((slot) => {
         const ocupante = agendamentos.find(
           (ag) =>
             paraMinutos(ag.horaInicio) < slot.fim &&
             paraMinutos(ag.horaFim) > slot.inicio
         );
 
-        const slotAnterior = idx > 0 ? slots[idx - 1] : null;
-        const ocupanteAnterior = slotAnterior
-          ? agendamentos.find(
-              (ag) =>
-                paraMinutos(ag.horaInicio) < slotAnterior.fim &&
-                paraMinutos(ag.horaFim) > slotAnterior.inicio
-            )
-          : null;
-
-        const continuaMesmoBloco =
-          ocupante && ocupanteAnterior && ocupante.id === ocupanteAnterior.id;
-
-        const primeiraLinhaDoBloco = ocupante && !continuaMesmoBloco;
-
         const candidatoFim = Math.min(slot.inicio + 60, FIM_EXPEDIENTE);
         const bloqueadoPorDescanso =
           !ocupante && excederiaDescanso(agendamentos, slot.inicio, candidatoFim);
 
-        const livre = !ocupante && !bloqueadoPorDescanso;
+        // Atendimento e descanso obrigatório ficam com a mesma aparência:
+        // vermelho normal, sem detalhes escritos, só "Horário já agendado".
+        const ocupado = ocupante || bloqueadoPorDescanso;
+        const livre = !ocupado;
 
         return (
           <div
             key={slot.inicio}
             className={`flex items-stretch border-b border-white/5 last:border-b-0 ${
               livre ? 'group cursor-pointer hover:bg-pulse-500/10' : ''
-            } ${bloqueadoPorDescanso ? 'bg-red-500/10' : ''}`}
+            }`}
             onClick={() => {
               if (livre) {
                 onSlotLivreClick({
@@ -105,51 +93,29 @@ export default function CalendarGrid({ agendamentos, onSlotLivreClick, onExcluir
           >
             <div
               className={`w-16 shrink-0 py-2.5 pl-4 font-mono text-[11px] ${
-                bloqueadoPorDescanso ? 'text-red-400/70' : 'text-white/35'
+                ocupado ? 'text-red-300' : 'text-white/35'
               }`}
             >
               {paraHHMM(slot.inicio)}
             </div>
 
-            {ocupante ? (
-              <div
-                className={`flex-1 my-0.5 mr-3 px-3 py-2 bg-vital-500/15 border-l-4 border-vital-500 ${
-                  primeiraLinhaDoBloco ? 'rounded-t-md mt-2' : ''
-                }`}
-              >
-                {primeiraLinhaDoBloco && (
-                  <div className="flex items-center justify-between gap-2">
-                    <div>
-                      <p className="text-sm font-semibold text-white">
-                        {ocupante.cliente}
-                      </p>
-                      <p className="text-xs text-white/60">
-                        {ocupante.tipo} · {ocupante.horaInicio}–{ocupante.horaFim}
-                      </p>
-                      {ocupante.descricao && (
-                        <p className="text-xs text-white/40 mt-0.5">
-                          {ocupante.descricao}
-                        </p>
-                      )}
-                    </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onExcluir(ocupante.id);
-                      }}
-                      className="text-white/40 hover:text-vital-400 text-xs font-mono shrink-0"
-                      title="Cancelar agendamento"
-                    >
-                      remover
-                    </button>
-                  </div>
-                )}
-              </div>
-            ) : bloqueadoPorDescanso ? (
-              <div className="flex-1 my-0.5 mr-3 px-3 py-2 flex items-center border-l-4 border-red-500/40 bg-red-500/5 rounded-md">
-                <span className="text-[11px] text-red-400/80 font-mono tracking-wide">
-                  bloqueado · precisa de {DESCANSO_MINIMO}min de descanso antes
+            {ocupado ? (
+              <div className="flex-1 my-0.5 mr-3 px-3 py-2 bg-red-500/20 border-l-4 border-red-500/70 rounded-md flex items-center justify-between">
+                <span className="text-xs text-red-200 font-mono tracking-wide">
+                  Horário já agendado
                 </span>
+                {ocupante && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onExcluir(ocupante.id);
+                    }}
+                    className="text-white/40 hover:text-red-300 text-xs font-mono shrink-0"
+                    title="Cancelar agendamento"
+                  >
+                    remover
+                  </button>
+                )}
               </div>
             ) : (
               <div className="flex-1 my-0.5 mr-3 px-3 py-2 flex items-center">
