@@ -1,18 +1,11 @@
 /**
  * conflictService.js
  * ------------------------------------------------------------------
- * Regras de negócio obrigatórias:
- * 1) "Gestão de Conflitos": um consultor não pode ter dois agendamentos
- *    que se sobrepõem no mesmo dia.
- * 2) "Descanso obrigatório": um consultor não pode ficar mais de 1h
- *    (DURACAO_MAXIMA_SEGUIDA) em atendimentos emendados (sem intervalo)
- *    sem que haja pelo menos 30min (DESCANSO_MINIMO) de descanso antes
- *    de continuar.
+ * Regra de negócio:
+ * "Gestão de Conflitos": um consultor não pode ter dois agendamentos
+ * que se sobrepõem no mesmo dia (mesmo horário, ou horários que se cruzam).
  * ------------------------------------------------------------------
  */
-
-const DURACAO_MAXIMA_SEGUIDA = 60; // minutos
-const DESCANSO_MINIMO = 30; // minutos
 
 function paraMinutos(horaHHMM) {
   const [h, m] = horaHHMM.split(':').map(Number);
@@ -50,42 +43,6 @@ export function encontrarConflito(agendamentosDoDia, novo, ignorarId = null) {
   return null;
 }
 
-export function excederiaDescanso(
-  agendamentosDoDia,
-  candidatoInicio,
-  candidatoFim,
-  ignorarId = null
-) {
-  const existentes = agendamentosDoDia
-    .filter((a) => !ignorarId || a.id !== ignorarId)
-    .map((a) => ({ inicio: paraMinutos(a.horaInicio), fim: paraMinutos(a.horaFim) }))
-    .sort((a, b) => a.inicio - b.inicio);
-
-  let duracaoAntes = 0;
-  let alvoAntes = candidatoInicio;
-  for (let i = existentes.length - 1; i >= 0; i--) {
-    const ex = existentes[i];
-    if (ex.fim === alvoAntes) {
-      duracaoAntes += ex.fim - ex.inicio;
-      alvoAntes = ex.inicio;
-    }
-  }
-
-  let duracaoDepois = 0;
-  let alvoDepois = candidatoFim;
-  for (let i = 0; i < existentes.length; i++) {
-    const ex = existentes[i];
-    if (ex.inicio === alvoDepois) {
-      duracaoDepois += ex.fim - ex.inicio;
-      alvoDepois = ex.fim;
-    }
-  }
-
-  const duracaoBloco =
-    duracaoAntes + (candidatoFim - candidatoInicio) + duracaoDepois;
-  return duracaoBloco > DURACAO_MAXIMA_SEGUIDA;
-}
-
 export function validarNovoAgendamento(
   agendamentosDoDia,
   { horaInicio, horaFim },
@@ -98,21 +55,6 @@ export function validarNovoAgendamento(
   );
   if (conflito) {
     return { ok: false, motivo: 'conflito', conflito };
-  }
-
-  if (
-    excederiaDescanso(
-      agendamentosDoDia,
-      paraMinutos(horaInicio),
-      paraMinutos(horaFim),
-      ignorarId
-    )
-  ) {
-    return {
-      ok: false,
-      motivo: 'descanso',
-      mensagem: `Esse horário ultrapassaria ${DURACAO_MAXIMA_SEGUIDA} min seguidos de atendimento. É necessário pelo menos ${DESCANSO_MINIMO} min de descanso antes.`,
-    };
   }
 
   return { ok: true };
@@ -133,10 +75,8 @@ export function calcularHorariosLivres(
   while (cursor + passoMinutos <= fim) {
     const blocoFim = cursor + passoMinutos;
     const ocupado = ocupados.some(([i, f]) => cursor < f && i < blocoFim);
-    const bloqueadoPorDescanso =
-      !ocupado && excederiaDescanso(agendamentosDoDia, cursor, blocoFim);
 
-    if (!ocupado && !bloqueadoPorDescanso) {
+    if (!ocupado) {
       livres.push({ inicio: paraHHMM(cursor), fim: paraHHMM(blocoFim) });
     }
     cursor += passoMinutos;

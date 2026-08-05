@@ -1,7 +1,6 @@
 const INICIO_EXPEDIENTE = 8 * 60; // 08:00
 const FIM_EXPEDIENTE = 18 * 60; // 18:00
 const PASSO = 30; // minutos
-const DURACAO_MAXIMA_SEGUIDA = 60; // minutos
 
 function paraMinutos(hhmm) {
   const [h, m] = hhmm.split(':').map(Number);
@@ -22,39 +21,6 @@ function gerarSlots() {
   return slots;
 }
 
-// Mesma regra aplicada no backend (conflictService.js -> excederiaDescanso):
-// nenhum atendimento pode formar mais de 1h seguida (emendada, sem intervalo)
-// sem 30min de descanso antes/depois. Usada aqui só pra pintar a grade;
-// quem garante de verdade é o backend na hora de salvar.
-function excederiaDescanso(agendamentos, candidatoInicio, candidatoFim) {
-  const existentes = agendamentos
-    .map((a) => ({ inicio: paraMinutos(a.horaInicio), fim: paraMinutos(a.horaFim) }))
-    .sort((a, b) => a.inicio - b.inicio);
-
-  let duracaoAntes = 0;
-  let alvoAntes = candidatoInicio;
-  for (let i = existentes.length - 1; i >= 0; i--) {
-    const ex = existentes[i];
-    if (ex.fim === alvoAntes) {
-      duracaoAntes += ex.fim - ex.inicio;
-      alvoAntes = ex.inicio;
-    }
-  }
-
-  let duracaoDepois = 0;
-  let alvoDepois = candidatoFim;
-  for (let i = 0; i < existentes.length; i++) {
-    const ex = existentes[i];
-    if (ex.inicio === alvoDepois) {
-      duracaoDepois += ex.fim - ex.inicio;
-      alvoDepois = ex.fim;
-    }
-  }
-
-  const duracaoBloco = duracaoAntes + (candidatoFim - candidatoInicio) + duracaoDepois;
-  return duracaoBloco > DURACAO_MAXIMA_SEGUIDA;
-}
-
 export default function CalendarGrid({ agendamentos, onSlotLivreClick, onExcluir }) {
   const slots = gerarSlots();
 
@@ -68,12 +34,7 @@ export default function CalendarGrid({ agendamentos, onSlotLivreClick, onExcluir
         );
 
         const candidatoFim = Math.min(slot.inicio + 60, FIM_EXPEDIENTE);
-        const bloqueadoPorDescanso =
-          !ocupante && excederiaDescanso(agendamentos, slot.inicio, candidatoFim);
-
-        // Atendimento e descanso obrigatório ficam com a mesma aparência:
-        // vermelho normal, sem detalhes escritos, só "Horário já agendado".
-        const ocupado = ocupante || bloqueadoPorDescanso;
+        const ocupado = !!ocupante;
         const livre = !ocupado;
 
         return (
@@ -104,18 +65,16 @@ export default function CalendarGrid({ agendamentos, onSlotLivreClick, onExcluir
                 <span className="text-xs text-red-200 font-mono tracking-wide">
                   Horário já agendado
                 </span>
-                {ocupante && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onExcluir(ocupante.id);
-                    }}
-                    className="text-white/40 hover:text-red-300 text-xs font-mono shrink-0"
-                    title="Cancelar agendamento"
-                  >
-                    remover
-                  </button>
-                )}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onExcluir(ocupante.id);
+                  }}
+                  className="text-white/40 hover:text-red-300 text-xs font-mono shrink-0"
+                  title="Cancelar agendamento"
+                >
+                  remover
+                </button>
               </div>
             ) : (
               <div className="flex-1 my-0.5 mr-3 px-3 py-2 flex items-center">
