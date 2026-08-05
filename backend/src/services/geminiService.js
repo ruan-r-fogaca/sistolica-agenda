@@ -16,7 +16,7 @@ import { GoogleGenAI } from '@google/genai';
 import { calcularHorariosLivres } from './conflictService.js';
 
 const apiKey = process.env.GEMINI_API_KEY;
-const modelo = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const modelo = process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite';
 
 let client = null;
 if (apiKey && apiKey !== 'coloque_sua_chave_aqui') {
