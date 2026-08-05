@@ -55,9 +55,13 @@ export default function CalendarGrid({ agendamentos, onSlotLivreClick, onExcluir
             }`}
             onClick={() => {
               if (!ocupante) {
+                // Clique cria por padrão 1h de atendimento (o usuário pode
+                // ajustar início/fim livremente no formulário). A regra de
+                // "máx. 1h seguida sem 30min de descanso" é validada pelo
+                // backend ao salvar, então funciona pra qualquer duração.
                 onSlotLivreClick({
                   horaInicio: paraHHMM(slot.inicio),
-                  horaFim: paraHHMM(slot.fim),
+                  horaFim: paraHHMM(Math.min(slot.inicio + 60, FIM_EXPEDIENTE)),
                 });
               }
             }}

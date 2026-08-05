@@ -5,7 +5,7 @@ import {
   deleteAgendamento,
   getConsultores,
 } from '../services/sheetsService.js';
-import { encontrarConflito, calcularHorariosLivres } from '../services/conflictService.js';
+import { encontrarConflito, calcularHorariosLivres, validarDescansoObrigatorio } from '../services/conflictService.js';
 
 const router = Router();
 
@@ -59,6 +59,11 @@ router.post('/', async (req, res) => {
       erro: 'Conflito de horário: o consultor já tem um compromisso nesse intervalo.',
       conflito,
     });
+  }
+
+  const descanso = validarDescansoObrigatorio(agendamentosDoDia, { horaInicio, horaFim });
+  if (descanso.violacao) {
+    return res.status(409).json({ erro: descanso.mensagem });
   }
 
   const registro = await addAgendamento({
