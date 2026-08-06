@@ -8,9 +8,12 @@ export default function Sidebar({
   return (
     <aside className="w-72 shrink-0 bg-ink border-r border-white/10 flex flex-col h-full">
       <div className="px-6 py-6 border-b border-white/10">
-        <p className="font-mono text-[11px] tracking-[0.2em] text-pulse-400 uppercase">
-          Sistólica
-        </p>
+        <div className="flex items-center gap-2">
+          <img src="/logo-sistolica.png" alt="Sistólica" className="w-5 h-5 object-contain" />
+          <p className="font-mono text-[11px] tracking-[0.2em] text-pulse-400 uppercase">
+            Sistólica
+          </p>
+        </div>
         <h1 className="font-display text-xl text-white mt-1 leading-tight">
           Agenda de
           <br />
@@ -62,11 +65,6 @@ export default function Sidebar({
         </ul>
       </div>
 
-      <div className="px-6 py-4 border-t border-white/10 text-[11px] text-white/35 font-mono leading-relaxed">
-        Dados sincronizados com a
-        <br />
-        planilha Google Sheets (simulado)
-      </div>
     </aside>
   );
 }
