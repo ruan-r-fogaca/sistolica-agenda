@@ -1,9 +1,8 @@
 # Agenda Sistólica — MVP de agenda inteligente para consultores
 
 Sistema interno de controle de agendas com **gestão de conflitos de horário**,
-**visualização em tempo real** dos horários livres/ocupados, **integração
-(simulada) com Google Sheets** e uma **sugestão inteligente de horários via
-Gemini API**.
+**visualização em tempo real** dos horários livres/ocupados, **integração real
+com Google Sheets** e uma **sugestão inteligente de horários via Gemini API**.
 
 Feito para o desafio prático de Desenvolvedor Júnior / Analista de Automação.
 
@@ -11,27 +10,26 @@ Feito para o desafio prático de Desenvolvedor Júnior / Analista de Automação
 
 ## Estrutura do projeto
 
-```
 sistolica-agenda/
-├── backend/          # API REST em Node.js + Express
-│   ├── server.js
-│   ├── .env.example
-│   └── src/
-│       ├── data/db.json          # "planilha" simulada (Google Sheets)
-│       ├── services/
-│       │   ├── sheetsService.js  # integração com dados (mock, plugável)
-│       │   ├── conflictService.js# lógica de conflito de horários
-│       │   └── geminiService.js  # integração com a IA (Gemini)
-│       └── routes/
-│           ├── consultores.js
-│           ├── agenda.js
-│           └── ia.js
-└── frontend/         # React + Vite + TailwindCSS
-    └── src/
-        ├── App.jsx
-        ├── api.js
-        └── components/
-```
+├── backend/ # API REST em Node.js + Express
+│ ├── server.js
+│ ├── .env.example
+│ └── src/
+│ ├── data/db.json # fallback simulado (usado só se o Sheets real não estiver configurado)
+│ ├── services/
+│ │ ├── sheetsService.js # integração real com Google Sheets (com fallback simulado)
+│ │ ├── conflictService.js# lógica de conflito de horários
+│ │ └── geminiService.js # integração com a IA (Gemini)
+│ └── routes/
+│ ├── consultores.js
+│ ├── agenda.js
+│ └── ia.js
+└── frontend/ # React + Vite + TailwindCSS
+└── src/
+├── App.jsx
+├── api.js
+└── components/
+
 
 ## Como as regras obrigatórias foram atendidas
 
@@ -39,7 +37,7 @@ sistolica-agenda/
 |---|---|
 | **Gestão de Conflitos** | `backend/src/services/conflictService.js` — verifica sobreposição de horário do mesmo consultor antes de salvar (`POST /api/agenda` retorna `409` em caso de conflito). |
 | **Organização Visual** | `frontend/src/components/CalendarGrid.jsx` — grade do dia (08h–18h) com horários livres (clicáveis) e ocupados (destacados), atualizada em tempo real após cada ação. |
-| **Integração de Dados** | `backend/src/services/sheetsService.js` — simula a leitura/gravação de uma planilha Google Sheets. A assinatura das funções já é a mesma que a integração real usaria; o topo do arquivo explica passo a passo como plugar a API real do Google Sheets. |
+| **Integração de Dados** | `backend/src/services/sheetsService.js` — integração **real** com o Google Sheets (leitura e gravação em tempo real), com fallback automático para um modo simulado (`db.json`) caso as credenciais não estejam configuradas — assim a demo nunca quebra. |
 | **Inteligência Artificial** | `backend/src/services/geminiService.js` — usa o pacote `@google/genai` para, a partir da agenda do dia e da descrição do atendimento, sugerir o melhor horário livre e classificar o tipo de atendimento. Se não houver `GEMINI_API_KEY`, cai automaticamente em um modo heurístico (não quebra a demo). |
 
 ---
@@ -132,10 +130,9 @@ No PowerShell (Windows), dentro da pasta onde está o arquivo `.json` baixado:
 
 Isso copia o valor para a área de transferência. Cole no `backend/.env`:
 
-```
 GOOGLE_SHEET_ID=AAAA1234BBBB
 GOOGLE_SERVICE_ACCOUNT_B64=(cole aqui o texto copiado)
-```
+
 
 Reinicie o backend (`Ctrl+C` e `npm run dev` de novo). Se der certo, ao
 acessar `http://localhost:4000/api/health` o campo `googleSheets` deve
@@ -206,7 +203,6 @@ avaliar o desafio.
 
 ## Próximos passos (fora do escopo do MVP)
 
-- Trocar `sheetsService.js` pela integração real com Google Sheets API.
 - Autenticação/login por consultor.
 - Edição de agendamentos existentes (hoje só cria e remove).
 - Testes automatizados (Jest/Vitest) para `conflictService.js`.
