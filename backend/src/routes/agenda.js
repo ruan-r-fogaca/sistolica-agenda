@@ -7,6 +7,13 @@ import {
 } from '../services/sheetsService.js';
 import { validarNovoAgendamento, calcularHorariosLivres } from '../services/conflictService.js';
 
+const DURACAO_MAXIMA_MINUTOS = 90; // 1h30
+
+function paraMinutos(hhmm) {
+  const [h, m] = hhmm.split(':').map(Number);
+  return h * 60 + m;
+}
+
 const router = Router();
 
 // GET /api/agenda?consultorId=&data=
@@ -44,6 +51,12 @@ router.post('/', async (req, res) => {
     return res
       .status(400)
       .json({ erro: 'O horário de início deve ser antes do horário de fim.' });
+  }
+
+  if (paraMinutos(horaFim) - paraMinutos(horaInicio) > DURACAO_MAXIMA_MINUTOS) {
+    return res.status(400).json({
+      erro: 'O agendamento não pode ultrapassar 1h30 de duração.',
+    });
   }
 
   const consultores = await getConsultores();

@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react';
 
+const DURACAO_MAXIMA_MINUTOS = 90; // 1h30
+
+function paraMinutos(hhmm) {
+  const [h, m] = hhmm.split(':').map(Number);
+  return h * 60 + m;
+}
+
 export default function NewAppointmentModal({
   aberto,
   onFechar,
@@ -16,10 +23,12 @@ export default function NewAppointmentModal({
     descricao: '',
     tipo: '',
   });
+  const [erroDuracao, setErroDuracao] = useState(null);
 
   useEffect(() => {
     if (aberto) {
       setForm((prev) => ({ ...prev, ...valoresIniciais }));
+      setErroDuracao(null);
     }
   }, [aberto, valoresIniciais]);
 
@@ -27,6 +36,7 @@ export default function NewAppointmentModal({
 
   function atualizar(campo, valor) {
     setForm((prev) => ({ ...prev, [campo]: valor }));
+    setErroDuracao(null);
   }
 
   return (
@@ -44,6 +54,10 @@ export default function NewAppointmentModal({
         <form
           onSubmit={(e) => {
             e.preventDefault();
+            if (paraMinutos(form.horaFim) - paraMinutos(form.horaInicio) > DURACAO_MAXIMA_MINUTOS) {
+              setErroDuracao('O agendamento não pode ultrapassar 1h30 de duração.');
+              return;
+            }
             onSalvar(form);
           }}
           className="px-6 py-5 space-y-4"
@@ -51,6 +65,12 @@ export default function NewAppointmentModal({
           {erroConflito && (
             <div className="bg-vital-500/15 border border-vital-500/40 text-vital-400 text-sm rounded-md px-3 py-2">
               {erroConflito}
+            </div>
+          )}
+
+          {erroDuracao && (
+            <div className="bg-vital-500/15 border border-vital-500/40 text-vital-400 text-sm rounded-md px-3 py-2">
+              {erroDuracao}
             </div>
           )}
 
